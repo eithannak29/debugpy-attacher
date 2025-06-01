@@ -1,11 +1,21 @@
 {
-  "debugpy setup": {
-    "prefix": "vpdb",
+  "debugpy attach": {
+    "prefix": "debugpy",
     "body": [
       "import debugpy",
       "debugpy.listen(5678)",
       "debugpy.wait_for_client()"
     ],
-    "description": "Insert debugpy setup code"
+    "description": "Add debugpy attachment point"
+  },
+  "debugpy attach with breakpoint": {
+    "prefix": "debugpyb",
+    "body": [
+      "import debugpy",
+      "debugpy.listen(5678)",
+      "debugpy.wait_for_client()",
+      "debugpy.breakpoint()"
+    ],
+    "description": "Add debugpy attachment point with immediate breakpoint"
   }
 }
