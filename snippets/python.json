@@ -1,0 +1,11 @@
+{
+  "debugpy setup": {
+    "prefix": "vpdb",
+    "body": [
+      "import debugpy",
+      "debugpy.listen(5678)",
+      "debugpy.wait_for_client()"
+    ],
+    "description": "Insert debugpy setup code"
+  }
+}
