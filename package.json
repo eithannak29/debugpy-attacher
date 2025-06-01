@@ -2,8 +2,10 @@
   "name": "debugpy-attacher",
   "displayName": "Debugpy Attacher",
   "description": "Automatically detect and attach to debugpy processes",
-  "version": "1.0.0",
-  "publisher": "your-publisher-name",
+  "version": "1.0.1",
+  "publisher": "DebugPyAttacher",
+  "license": "MIT",
+  "icon": "icon.jpg",
   "repository": {
     "type": "git",
     "url": "https://github.com/camilziane/debugpy-attacher.git"
@@ -25,7 +27,7 @@
     "attach"
   ],
   "activationEvents": [
-    "*"
+    "onLanguage:python"
   ],
   "main": "./out/extension.js",
   "contributes": {
