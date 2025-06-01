@@ -2,14 +2,14 @@
 
 Automatically detect and attach to debugpy processes in VS Code.
 
+![Demo](debug-attach.gif)
+
 ## Quick Start
 
 1. **Add debugpy to your Python code**: Type `debugpy` and press Tab to insert:
 
    ```python
-   import debugpy
-   debugpy.listen(5678)
-   debugpy.wait_for_client()
+   import debugpy;debugpy.listen(5678);debugpy.wait_for_client()
    ```
 
 2. **Set breakpoints**: You can add breakpoints by clicking in the left margin of your code, just like using VS Code's built-in debugger
