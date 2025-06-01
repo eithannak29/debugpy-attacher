@@ -4,7 +4,7 @@ Automatically detect and attach to debugpy processes in VS Code.
 
 ## Quick Start
 
-1. **Add debugpy to your Python code**: Type `vdb` and press Tab to insert:
+1. **Add debugpy to your Python code**: Type `vpdb` and press Tab to insert:
 
    ```python
    import debugpy
