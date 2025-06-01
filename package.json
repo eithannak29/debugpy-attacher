@@ -4,6 +4,14 @@
   "description": "Automatically detect and attach to debugpy processes",
   "version": "1.0.0",
   "publisher": "your-publisher-name",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/camilziane/debugpy-attacher.git"
+  },
+  "bugs": {
+    "url": "https://github.com/camilziane/debugpy-attacher/issues"
+  },
+  "homepage": "https://github.com/camilziane/debugpy-attacher#readme",
   "engines": {
     "vscode": "^1.74.0"
   },
