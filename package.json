@@ -2,7 +2,7 @@
   "name": "debugpy-attacher",
   "displayName": "DebugPy Attacher",
   "description": "Automatically detect and attach to debugpy processes",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "publisher": "DebugPyAttacher",
   "license": "MIT",
   "icon": "icon.png",
