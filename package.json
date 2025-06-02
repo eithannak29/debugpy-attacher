@@ -5,7 +5,7 @@
   "version": "1.0.6",
   "publisher": "DebugPyAttacher",
   "license": "MIT",
-  "icon": "icon.jpg",
+  "icon": "icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/camilziane/debugpy-attacher.git"
