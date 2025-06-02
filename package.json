@@ -1,6 +1,6 @@
 {
   "name": "debugpy-attacher",
-  "displayName": "Debugpy Attacher",
+  "displayName": "DebugPy Attacher",
   "description": "Automatically detect and attach to debugpy processes",
   "version": "1.0.6",
   "publisher": "DebugPyAttacher",

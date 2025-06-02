@@ -1,4 +1,4 @@
-# Debugpy Attacher
+# DebugPy Attacher
 
 Automatically detect and attach to debugpy processes in VS Code.
 
