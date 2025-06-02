@@ -2,14 +2,14 @@
   "debugpy attach": {
     "prefix": "debugpy",
     "body": [
-      "import debugpy; debugpy.listen(5678); debugpy.wait_for_client()"
+      "import debugpy; (debugpy.listen(5678), debugpy.wait_for_client()) if not debugpy.is_client_connected() else None"
     ],
     "description": "Add debugpy attachment point"
   },
   "debugpy attach with breakpoint": {
     "prefix": "debugpyb",
     "body": [
-      "import debugpy; debugpy.listen(5678);debugpy.wait_for_client()",
+      "import debugpy; (debugpy.listen(5678), debugpy.wait_for_client()) if not debugpy.is_client_connected() else None",
       "debugpy.breakpoint()"
     ],
     "description": "Add debugpy attachment point with immediate breakpoint"
