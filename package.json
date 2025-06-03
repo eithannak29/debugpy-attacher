@@ -2,11 +2,10 @@
   "name": "debugpy-attacher",
   "displayName": "DebugPy Attacher",
   "description": "Automatically detect and attach to debugpy processes",
-  "version": "1.0.9",
+  "version": "1.0.11",
   "publisher": "DebugPyAttacher",
   "license": "MIT",
   "icon": "icon.png",
-  "os": ["darwin", "linux"],
   "repository": {
     "type": "git",
     "url": "https://github.com/camilziane/debugpy-attacher.git"
@@ -40,6 +39,10 @@
       {
         "command": "debugpy.toggleLiveMonitoring",
         "title": "Debugpy: Toggle Live Monitoring"
+      },
+      {
+        "command": "debugpy.toggleAutoAttach",
+        "title": "Debugpy: Toggle Auto-Attach"
       }
     ],
     "configuration": {
@@ -49,6 +52,11 @@
           "type": "boolean",
           "default": true,
           "description": "Enable live monitoring of debugpy processes in the background"
+        },
+        "debugpyAttacher.autoAttach": {
+          "type": "boolean",
+          "default": false,
+          "description": "(Beta) Automatically attach to debugger when a new debugpy process is discovered"
         }
       }
     },
@@ -62,7 +70,11 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "package": "vsce package"
+    "package": "vsce package",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
   },
   "devDependencies": {
     "@types/vscode": "^1.74.0",
