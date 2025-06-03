@@ -22,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
   const disposable = vscode.commands.registerCommand('debugpy.attachToPort', async () => {
     try {
       const pythonProcesses = await findPythonProcesses();
-      
+
       if (pythonProcesses.length === 0) {
         vscode.window.showErrorMessage("No Python processes with listening ports found. Make sure a debugpy process is running.");
         return;
@@ -56,12 +56,12 @@ export function activate(context: vscode.ExtensionContext) {
   const toggleLiveMonitoringCommand = vscode.commands.registerCommand('debugpy.toggleLiveMonitoring', async () => {
     const config = vscode.workspace.getConfiguration('debugpyAttacher');
     const currentValue = config.get('enableLiveMonitoring', true);
-    
+
     await config.update('enableLiveMonitoring', !currentValue, vscode.ConfigurationTarget.Global);
-    
+
     const newState = !currentValue ? 'enabled' : 'disabled';
     vscode.window.showInformationMessage(`Debugpy live monitoring ${newState}`);
-    
+
     // Restart monitoring with new setting
     restartMonitoring();
   });
@@ -84,13 +84,16 @@ export function activate(context: vscode.ExtensionContext) {
 
 function isLiveMonitoringEnabled(): boolean {
   const config = vscode.workspace.getConfiguration('debugpyAttacher');
-  return config.get('enableLiveMonitoring', true);
+
+  const defaultValue = process.platform === 'win32' ? false : true;
+
+  return config.get('enableLiveMonitoring', defaultValue);
 }
 
 function startMonitoring() {
   // Check immediately
   updateStatusBar();
-  
+
   if (isLiveMonitoringEnabled()) {
     checkInterval = setInterval(updateStatusBar, 3000);
   }
@@ -111,7 +114,7 @@ function restartMonitoring() {
 async function updateStatusBar() {
   try {
     const processes = await findPythonProcesses();
-    
+
     if (processes.length > 0) {
       const ports = processes.map(p => p.port).join(', ');
       statusBarItem.text = `$(debug) Debugpy: ${ports}`;
@@ -176,9 +179,9 @@ async function attachToDebugger(process: PythonProcess): Promise<void> {
       name: `Attach to ${process.script}`,
       type: "python",
       request: "attach",
-      connect: { 
-        host: "localhost", 
-        port: parseInt(process.port) 
+      connect: {
+        host: "localhost",
+        port: parseInt(process.port)
       },
       justMyCode: false,
       console: "integratedTerminal"
