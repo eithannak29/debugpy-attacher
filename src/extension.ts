@@ -13,24 +13,21 @@ interface PythonProcess {
 
 let statusBarItem: vscode.StatusBarItem;
 let checkInterval: NodeJS.Timeout | undefined;
-let knownPorts = new Set<string>(); // Track known ports to detect new ones
-let windowId: string; // Unique identifier for this window
+let knownPorts = new Set<string>();
+let windowId: string;
 let lockCleanupInterval: NodeJS.Timeout | undefined;
-let lastUserActivity: number = Date.now(); // Track last user activity in this window
+let lastUserActivity: number = Date.now();
 
 export function activate(context: vscode.ExtensionContext) {
-  // Generate unique window ID
   windowId = generateWindowId();
   
-  // Create status bar item
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBarItem.command = 'debugpy.attachToPort';
   statusBarItem.tooltip = 'Click to attach to debugpy process';
   context.subscriptions.push(statusBarItem);
 
-  // Register the attach command
-  const disposable = vscode.commands.registerCommand('debugpy.attachToPort', async () => {
-    // Mark this window as active when user manually triggers attach
+  // Register commands
+  const attachCommand = vscode.commands.registerCommand('debugpy.attachToPort', async () => {
     markUserActivity();
     
     try {
@@ -41,11 +38,9 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      // If only one process, check if we can attach (respect locks for manual attach too)
       if (pythonProcesses.length === 1) {
         const process = pythonProcesses[0];
         
-        // Check if port is already locked by another window
         if (!tryAcquirePortLock(process.port)) {
           vscode.window.showWarningMessage(`Port ${process.port} is already being debugged by another window.`);
           return;
@@ -53,7 +48,6 @@ export function activate(context: vscode.ExtensionContext) {
         
         try {
           await attachToDebugger(process);
-          // Release lock after successful attach since manual attach is one-time
           setTimeout(() => releasePortLock(process.port), 1000);
         } catch (error) {
           releasePortLock(process.port);
@@ -74,7 +68,6 @@ export function activate(context: vscode.ExtensionContext) {
       });
 
       if (selected) {
-        // Check if port is already locked by another window
         if (!tryAcquirePortLock(selected.process.port)) {
           vscode.window.showWarningMessage(`Port ${selected.process.port} is already being debugged by another window.`);
           return;
@@ -82,7 +75,6 @@ export function activate(context: vscode.ExtensionContext) {
         
         try {
           await attachToDebugger(selected.process);
-          // Release lock after successful attach since manual attach is one-time
           setTimeout(() => releasePortLock(selected.process.port), 1000);
         } catch (error) {
           releasePortLock(selected.process.port);
@@ -94,9 +86,8 @@ export function activate(context: vscode.ExtensionContext) {
     }
   });
 
-  // Register the toggle live monitoring command
   const toggleLiveMonitoringCommand = vscode.commands.registerCommand('debugpy.toggleLiveMonitoring', async () => {
-    markUserActivity(); // Mark activity when user interacts
+    markUserActivity();
     
     const config = vscode.workspace.getConfiguration('debugpyAttacher');
     const currentValue = config.get('enableLiveMonitoring', true);
@@ -106,13 +97,11 @@ export function activate(context: vscode.ExtensionContext) {
     const newState = !currentValue ? 'enabled' : 'disabled';
     vscode.window.showInformationMessage(`Debugpy live monitoring ${newState}`);
 
-    // Restart monitoring with new setting
     restartMonitoring();
   });
 
-  // Register the toggle auto-attach command
   const toggleAutoAttachCommand = vscode.commands.registerCommand('debugpy.toggleAutoAttach', async () => {
-    markUserActivity(); // Mark activity when user interacts
+    markUserActivity();
     
     const config = vscode.workspace.getConfiguration('debugpyAttacher');
     const currentValue = config.get('autoAttach', false);
@@ -123,17 +112,10 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.showInformationMessage(`Debugpy auto-attach ${newState}`);
   });
 
-  context.subscriptions.push(disposable);
-  context.subscriptions.push(toggleLiveMonitoringCommand);
-  context.subscriptions.push(toggleAutoAttachCommand);
+  context.subscriptions.push(attachCommand, toggleLiveMonitoringCommand, toggleAutoAttachCommand);
 
-  // Track user activity in this window
   setupUserActivityTracking(context);
-
-  // Start monitoring based on configuration
   startMonitoring();
-  
-  // Start lock cleanup interval
   startLockCleanup();
   
   context.subscriptions.push({ 
@@ -144,7 +126,6 @@ export function activate(context: vscode.ExtensionContext) {
     }
   });
 
-  // Listen for configuration changes
   const configDisposable = vscode.workspace.onDidChangeConfiguration(event => {
     if (event.affectsConfiguration('debugpyAttacher.enableLiveMonitoring')) {
       restartMonitoring();
@@ -154,51 +135,20 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 function setupUserActivityTracking(context: vscode.ExtensionContext) {
-  // Track various user activities to determine the active window
-  
-  // Text document changes
-  const onDocumentChange = vscode.workspace.onDidChangeTextDocument(() => {
-    markUserActivity();
-  });
-  
-  // Active editor changes
-  const onEditorChange = vscode.window.onDidChangeActiveTextEditor(() => {
-    markUserActivity();
-  });
-  
-  // Selection changes
-  const onSelectionChange = vscode.window.onDidChangeTextEditorSelection(() => {
-    markUserActivity();
-  });
-  
-  // Visible ranges changes (scrolling, etc.)
-  const onVisibleRangesChange = vscode.window.onDidChangeTextEditorVisibleRanges(() => {
-    markUserActivity();
-  });
-  
-  // Terminal activity
-  const onTerminalChange = vscode.window.onDidChangeActiveTerminal(() => {
-    markUserActivity();
-  });
-  
-  // Window state changes
-  const onWindowStateChange = vscode.window.onDidChangeWindowState(state => {
-    if (state.focused) {
-      markUserActivity();
-    }
-  });
+  const trackingDisposables = [
+    vscode.workspace.onDidChangeTextDocument(() => markUserActivity()),
+    vscode.window.onDidChangeActiveTextEditor(() => markUserActivity()),
+    vscode.window.onDidChangeTextEditorSelection(() => markUserActivity()),
+    vscode.window.onDidChangeTextEditorVisibleRanges(() => markUserActivity()),
+    vscode.window.onDidChangeActiveTerminal(() => markUserActivity()),
+    vscode.window.onDidChangeWindowState(state => {
+      if (state.focused) {
+        markUserActivity();
+      }
+    })
+  ];
 
-  // Status bar item clicks
-  statusBarItem.command = 'debugpy.attachToPort';
-
-  context.subscriptions.push(
-    onDocumentChange,
-    onEditorChange,
-    onSelectionChange,
-    onVisibleRangesChange,
-    onTerminalChange,
-    onWindowStateChange
-  );
+  context.subscriptions.push(...trackingDisposables);
 }
 
 function markUserActivity() {
@@ -239,7 +189,7 @@ function updateActiveWindow(): void {
       lastActivity: lastUserActivity
     }));
   } catch (error) {
-    console.error('Failed to update active window:', error);
+    // Silently handle file system errors
   }
 }
 
@@ -247,29 +197,24 @@ function isActiveWindow(): boolean {
   try {
     const activeWindowPath = getActiveWindowPath();
     if (!fs.existsSync(activeWindowPath)) {
-      // No active window recorded, this window can be active
       updateActiveWindow();
       return true;
     }
 
     const data = JSON.parse(fs.readFileSync(activeWindowPath, 'utf8'));
     
-    // Check if this window has more recent activity (with a small buffer)
-    if (lastUserActivity > data.lastActivity + 1000) { // 1 second buffer
+    if (lastUserActivity > data.lastActivity + 1000) {
       updateActiveWindow();
       return true;
     }
     
-    // Check if the recorded active window is stale (reduced to 15 seconds)
     if (Date.now() - data.lastActivity > 15000) {
       updateActiveWindow();
       return true;
     }
 
-    // This window is active if it's the recorded active window
     return data.windowId === windowId;
   } catch (error) {
-    // If there's an error reading the file, assume this window can be active
     updateActiveWindow();
     return true;
   }
@@ -277,7 +222,6 @@ function isActiveWindow(): boolean {
 
 function tryAcquirePortLock(port: string): boolean {
   try {
-    // First check: are we the active window?
     if (!isActiveWindow()) {
       return false;
     }
@@ -285,22 +229,18 @@ function tryAcquirePortLock(port: string): boolean {
     ensureLockDir();
     const lockPath = getPortLockPath(port);
     
-    // Check if lock already exists and is recent
     if (fs.existsSync(lockPath)) {
       const lockData = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
       
-      // If lock is less than 30 seconds old and from different window, don't acquire
       if (Date.now() - lockData.timestamp < 30000 && lockData.windowId !== windowId) {
         return false;
       }
     }
 
-    // Final check: are we still the active window?
     if (!isActiveWindow()) {
       return false;
     }
 
-    // Acquire the lock
     fs.writeFileSync(lockPath, JSON.stringify({
       windowId,
       port,
@@ -310,7 +250,6 @@ function tryAcquirePortLock(port: string): boolean {
     
     return true;
   } catch (error) {
-    console.error('Failed to acquire port lock:', error);
     return false;
   }
 }
@@ -325,12 +264,11 @@ function releasePortLock(port: string): void {
       }
     }
   } catch (error) {
-    console.error('Failed to release port lock:', error);
+    // Silently handle errors
   }
 }
 
 function startLockCleanup(): void {
-  // Clean up stale locks every 30 seconds
   lockCleanupInterval = setInterval(() => {
     cleanupStaleLocks();
   }, 30000);
@@ -356,17 +294,15 @@ function cleanupStaleLocks(): void {
       try {
         const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         
-        // Remove locks older than 60 seconds
         if (now - data.timestamp > 60000) {
           fs.unlinkSync(filePath);
         }
       } catch (error) {
-        // If we can't read the file, it might be corrupted, remove it
         fs.unlinkSync(filePath);
       }
     }
   } catch (error) {
-    console.error('Failed to cleanup stale locks:', error);
+    // Silently handle cleanup errors
   }
 }
 
@@ -382,16 +318,15 @@ function cleanupWindowLocks(): void {
       try {
         const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         
-        // Remove locks from this window
         if (data.windowId === windowId) {
           fs.unlinkSync(filePath);
         }
       } catch (error) {
-        // Ignore errors when cleaning up
+        // Ignore cleanup errors
       }
     }
   } catch (error) {
-    console.error('Failed to cleanup window locks:', error);
+    // Silently handle cleanup errors
   }
 }
 
@@ -407,10 +342,7 @@ function isAutoAttachEnabled(): boolean {
 }
 
 function startMonitoring() {
-  // Mark initial activity
   markUserActivity();
-  
-  // Check immediately
   updateStatusBar();
 
   if (isLiveMonitoringEnabled()) {
@@ -427,7 +359,7 @@ function stopMonitoring() {
 
 function restartMonitoring() {
   stopMonitoring();
-  knownPorts.clear(); // Reset known ports when restarting
+  knownPorts.clear();
   startMonitoring();
 }
 
@@ -440,34 +372,28 @@ async function updateStatusBar() {
       const ports = processes.map((p: PythonProcess) => p.port).join(', ');
       const isActive = isActiveWindow();
       
-      // Show different status based on whether this is the active window
       statusBarItem.text = `$(debug) Debugpy: ${ports}`;
       statusBarItem.show();
 
-      // ONLY auto-attach for the active window - completely skip for others
       if (isAutoAttachEnabled() && isActive) {
         const newPorts = processes.filter((p: PythonProcess) => !knownPorts.has(p.port));
         
         for (const process of newPorts) {
-          // Multiple safety checks before attempting attach
           if (!vscode.debug.activeDebugSession && 
-              isActiveWindow() && // Double-check we're still active
+              isActiveWindow() && 
               tryAcquirePortLock(process.port)) {
             
-            // Triple-check we're still the active window before actual attach
             if (!isActiveWindow()) {
               releasePortLock(process.port);
               continue;
             }
             
             try {
-              await attachToDebugger(process, true); // Pass true for auto-attach
+              await attachToDebugger(process, true);
               vscode.window.showInformationMessage(`Auto-attached to debugpy on port ${process.port}`);
               
-              // Keep the lock for a bit longer to prevent other windows from trying
               setTimeout(() => releasePortLock(process.port), 5000);
             } catch (error) {
-              // Silently handle errors from non-active windows
               if (isActiveWindow()) {
                 vscode.window.showWarningMessage(`Failed to auto-attach to port ${process.port}: ${error}`);
               }
@@ -480,7 +406,6 @@ async function updateStatusBar() {
       statusBarItem.hide();
     }
 
-    // Update known ports for all windows to keep them in sync
     knownPorts = currentPorts;
   } catch (error) {
     statusBarItem.hide();
@@ -489,52 +414,81 @@ async function updateStatusBar() {
 
 async function findPythonProcesses(): Promise<PythonProcess[]> {
   return new Promise((resolve) => {
-    // Just find all debugpy processes directly
-    exec("ps -eo pid,args | grep python | grep debugpy | grep -v grep", (err, output) => {
-      if (err || !output.trim()) {
+    const processes: PythonProcess[] = [];
+    const seenPorts = new Set<string>();
+
+    const platformCmd = process.platform === 'win32'
+      ? `wmic process where "commandline like '%debugpy%'" get ProcessId,CommandLine /format:csv`
+      : `ps -eo pid,args | grep python | grep debugpy | grep -v grep`;
+    
+    exec(platformCmd, { 
+      timeout: 10000,
+      maxBuffer: 1024 * 1024,
+      encoding: 'utf8'
+    }, (err, output, stderr) => {
+      if (err || !output || !output.trim()) {
         resolve([]);
         return;
       }
 
-      const processes: PythonProcess[] = [];
-      const seenPorts = new Set<string>();
       const lines = output.split('\n').filter(line => line.trim());
 
       for (const line of lines) {
-        const parts = line.trim().split(/\s+/);
-        if (parts.length < 2) continue;
-
-        const pid = parts[0];
-        const command = parts.slice(1).join(' ');
-
-        // Extract debugpy port
-        const portMatch = command.match(/--port\s+(\d+)/);
-        if (portMatch && !seenPorts.has(portMatch[1])) {
-          seenPorts.add(portMatch[1]);
-
-          // Extract script name (simplified)
-          let script = 'Unknown script';
-          const scriptMatch = command.match(/([^\/\s]+\.py)/);
-          if (scriptMatch) {
-            script = scriptMatch[1];
+        if (process.platform === 'win32') {
+          const parts = line.split(',');
+          if (parts.length >= 3 && parts[1] && parts[1].includes('debugpy')) {
+            const commandLine = parts[1];
+            const pid = parts[2] ? parts[2].trim() : '';
+            
+            let port = null;
+            const portMatches = [
+              commandLine.match(/--port\s+(\d+)/),
+              commandLine.match(/--listen\s+(\d+)/),
+              commandLine.match(/:(\d{4,5})/),
+              commandLine.match(/\b(5\d{3}|6\d{3}|7\d{3}|8\d{3}|9\d{3})\b/)
+            ];
+            
+            for (const match of portMatches) {
+              if (match) {
+                port = match[1];
+                break;
+              }
+            }
+            
+            if (port && /^\d+$/.test(pid) && !seenPorts.has(port)) {
+              seenPorts.add(port);
+              
+              const scriptMatch = commandLine.match(/([^\\\/\s]+\.py)/);
+              const script = scriptMatch ? scriptMatch[1] : 'Unknown';
+              
+              processes.push({ pid, port, script, command: commandLine });
+            }
           }
+        } else {
+          const parts = line.trim().split(/\s+/);
+          if (parts.length < 2) continue;
 
-          processes.push({
-            pid,
-            port: portMatch[1],
-            script,
-            command
-          });
+          const pid = parts[0];
+          const command = parts.slice(1).join(' ');
+
+          const portMatch = command.match(/--port\s+(\d+)/);
+          if (portMatch && !seenPorts.has(portMatch[1])) {
+            seenPorts.add(portMatch[1]);
+
+            const scriptMatch = command.match(/([^\/\s]+\.py)/);
+            const script = scriptMatch ? scriptMatch[1] : 'Unknown script';
+
+            processes.push({ pid, port: portMatch[1], script, command });
+          }
         }
       }
-
+      
       resolve(processes);
     });
   });
 }
 
 async function attachToDebugger(process: PythonProcess, isAutoAttach: boolean = false): Promise<void> {
-  // Final safety check - don't attempt attach if not active window
   if (!isActiveWindow()) {
     throw new Error('Window is not active');
   }
@@ -553,7 +507,6 @@ async function attachToDebugger(process: PythonProcess, isAutoAttach: boolean = 
     });
 
     if (success) {
-      // Only show success message for manual attach and if we're still the active window
       if (!isAutoAttach && isActiveWindow()) {
         vscode.window.showInformationMessage(`Debugger attached to port ${process.port}`);
       }
@@ -561,7 +514,6 @@ async function attachToDebugger(process: PythonProcess, isAutoAttach: boolean = 
       throw new Error('Debug session failed to start');
     }
   } catch (error) {
-    // Only show error messages if we're the active window
     if (isActiveWindow()) {
       vscode.window.showErrorMessage(`Error attaching debugger: ${error}`);
     }
