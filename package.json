@@ -2,7 +2,7 @@
   "name": "debugpy-attacher",
   "displayName": "DebugPy Attacher",
   "description": "Automatically detect and attach to debugpy processes",
-  "version": "1.0.12",
+  "version": "1.1.0",
   "publisher": "DebugPyAttacher",
   "license": "MIT",
   "icon": "icon.png",
@@ -43,6 +43,36 @@
       {
         "command": "debugpy.toggleAutoAttach",
         "title": "Debugpy: Toggle Auto-Attach"
+      },
+      {
+        "command": "debugpy.cleanAttachRegionsWorkspace",
+        "title": "Debugpy: Clean All Attach Regions (Workspace)"
+      },
+      {
+        "command": "debugpy.cleanAttachRegionsCurrentFile",
+        "title": "Debugpy: Clean Attach Regions (Current File)"
+      },
+      {
+        "command": "debugpy.insertAttachCode",
+        "title": "Debugpy: Insert Attach Code"
+      },
+      {
+        "command": "debugpy.insertAttachCodeWithBreakpoint",
+        "title": "Debugpy: Insert Attach Code with Breakpoint"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "debugpy.insertAttachCode",
+        "key": "ctrl+k b",
+        "mac": "cmd+k b",
+        "when": "editorTextFocus && editorLangId == python"
+      },
+      {
+        "command": "debugpy.insertAttachCodeWithBreakpoint",
+        "key": "ctrl+k shift+b",
+        "mac": "cmd+k shift+b",
+        "when": "editorTextFocus && editorLangId == python"
       }
     ],
     "configuration": {
@@ -57,6 +87,18 @@
           "type": "boolean",
           "default": false,
           "description": "(Beta) Automatically attach to debugger when a new debugpy process is discovered"
+        },
+        "debugpyAttacher.showRulerDecorations": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show ruler decorations for debugpy attach regions in the overview ruler"
+        },
+        "debugpyAttacher.defaultPort": {
+          "type": "integer",
+          "default": 5678,
+          "minimum": 1024,
+          "maximum": 65535,
+          "description": "Default port number used in debugpy attach code snippets"
         }
       }
     },

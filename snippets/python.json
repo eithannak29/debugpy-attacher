@@ -1,17 +1,29 @@
 {
-  "debugpy attach": {
-    "prefix": "debugpy",
-    "body": [
-      "import debugpy; (debugpy.listen(5678), debugpy.wait_for_client()) if not debugpy.is_client_connected() else None"
+  "DebugPy Attach": {
+    "prefix": [
+      "debugpy"
     ],
-    "description": "Add debugpy attachment point"
+    "body": [
+      "# region dbpy_attach",
+      "import debugpy",
+      "(debugpy.listen(${1:5678}), debugpy.wait_for_client()) if not debugpy.is_client_connected() else None",
+      "# endregion",
+      "$0"
+    ],
+    "description": "Add debugpy attach code"
   },
-  "debugpy attach with breakpoint": {
-    "prefix": "debugpyb",
-    "body": [
-      "import debugpy; (debugpy.listen(5678), debugpy.wait_for_client()) if not debugpy.is_client_connected() else None",
-      "debugpy.breakpoint()"
+  "DebugPy Attach Breakpoint": {
+    "prefix": [
+      "debugpyb"
     ],
-    "description": "Add debugpy attachment point with immediate breakpoint"
+    "body": [
+      "# region dbpy_attach (b)",
+      "import debugpy",
+      "(debugpy.listen(${1:5678}), debugpy.wait_for_client()) if not debugpy.is_client_connected() else None",
+      "debugpy.breakpoint()",
+      "# endregion",
+      "$0"
+    ],
+    "description": "Add debugpy attach code with breakpoint"
   }
 }

@@ -1,5 +1,6 @@
 # Compiled output
 out/
+dist/
 node_modules/
 *.vsix
 
@@ -38,3 +39,6 @@ jspm_packages/
 
 # Optional eslint cache
 .eslintcache
+
+# Test files
+src/test/
