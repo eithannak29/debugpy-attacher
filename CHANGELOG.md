@@ -49,3 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 This release introduces comprehensive debugpy process management with live monitoring, auto-attach capabilities, and enhanced developer experience through visual indicators and keyboard shortcuts.
 
 The extension now provides a complete workflow for Python debugging with debugpy, from code insertion to automatic process detection and attachment. Fully compatible across Windows, macOS, and Linux platforms.
+
+### 1.2.0
+Added a status bar indicator that displays the state of live monitoring. Clicking the indicator toggles monitoring on or off.

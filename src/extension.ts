@@ -21,7 +21,10 @@ export function activate(context: vscode.ExtensionContext) {
   statusBarManager = new StatusBarManager(lockManager);
 
   // Register status bar
-  context.subscriptions.push(statusBarManager.getStatusBarItem());
+  context.subscriptions.push(
+    statusBarManager.getStatusBarItem(),
+    statusBarManager.getLiveStatusBarItem()
+  );
 
   // Register commands
   registerCommands(context);
@@ -332,6 +335,7 @@ function setupConfigurationHandling(context: vscode.ExtensionContext): void {
   const configDisposable = vscode.workspace.onDidChangeConfiguration(event => {
     if (event.affectsConfiguration('debugpyAttacher.enableLiveMonitoring')) {
       statusBarManager.restartMonitoring();
+      statusBarManager.updateLiveStatusItem();
     }
 
     if (event.affectsConfiguration('debugpyAttacher.showRulerDecorations')) {

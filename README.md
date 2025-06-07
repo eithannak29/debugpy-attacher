@@ -74,6 +74,10 @@ Access these commands via `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux):
 | `Debugpy: Clean Attach Regions (Current File)` | Remove debugpy regions from active file |
 | `Debugpy: Clean All Attach Regions (Workspace)` | Remove all debugpy regions from workspace |
 
+### Status Bar Indicator
+
+The extension adds a new status bar item showing whether **Live Monitoring** is active. Click this indicator to toggle monitoring on or off.
+
 ## ⌨️ Keyboard Shortcuts
 
 | Shortcut | Action |

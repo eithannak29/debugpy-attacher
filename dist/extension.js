@@ -37,12 +37,18 @@ module.exports = __toCommonJS(extension_exports);
 var vscode = __toESM(require("vscode"));
 var import_child_process = require("child_process");
 var statusBarItem;
+var liveStatusItem;
 var checkInterval;
 function activate(context) {
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBarItem.command = "debugpy.attachToPort";
   statusBarItem.tooltip = "Click to attach to debugpy process";
+  liveStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
+  liveStatusItem.command = "debugpy.toggleLiveMonitoring";
+  liveStatusItem.tooltip = "Toggle debugpy live monitoring";
   context.subscriptions.push(statusBarItem);
+  context.subscriptions.push(liveStatusItem);
+  updateLiveStatusItem();
   const disposable = vscode.commands.registerCommand("debugpy.attachToPort", async () => {
     try {
       const pythonProcesses = await findPythonProcesses();
@@ -75,6 +81,7 @@ function activate(context) {
     const newState = !currentValue ? "enabled" : "disabled";
     vscode.window.showInformationMessage(`Debugpy live monitoring ${newState}`);
     restartMonitoring();
+    updateLiveStatusItem();
   });
   context.subscriptions.push(disposable);
   context.subscriptions.push(toggleLiveMonitoringCommand);
@@ -83,6 +90,7 @@ function activate(context) {
   const configDisposable = vscode.workspace.onDidChangeConfiguration((event) => {
     if (event.affectsConfiguration("debugpyAttacher.enableLiveMonitoring")) {
       restartMonitoring();
+      updateLiveStatusItem();
     }
   });
   context.subscriptions.push(configDisposable);
@@ -92,6 +100,7 @@ function isLiveMonitoringEnabled() {
   return config.get("enableLiveMonitoring", true);
 }
 function startMonitoring() {
+  updateLiveStatusItem();
   updateStatusBar();
   if (isLiveMonitoringEnabled()) {
     checkInterval = setInterval(updateStatusBar, 3e3);
@@ -106,6 +115,14 @@ function stopMonitoring() {
 function restartMonitoring() {
   stopMonitoring();
   startMonitoring();
+}
+function updateLiveStatusItem() {
+  if (isLiveMonitoringEnabled()) {
+    liveStatusItem.text = "$(pulse) Debugpy Live On";
+  } else {
+    liveStatusItem.text = "$(circle-slash) Debugpy Live Off";
+  }
+  liveStatusItem.show();
 }
 async function updateStatusBar() {
   try {
@@ -182,6 +199,9 @@ function deactivate() {
   stopMonitoring();
   if (statusBarItem) {
     statusBarItem.dispose();
+  }
+  if (liveStatusItem) {
+    liveStatusItem.dispose();
   }
 }
 // Annotate the CommonJS export names for ESM import in node:
