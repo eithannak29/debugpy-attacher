@@ -5,6 +5,7 @@ import { PortLockManager } from './portLockManager';
 
 export class StatusBarManager {
   private statusBarItem: vscode.StatusBarItem;
+  private liveStatusItem: vscode.StatusBarItem;
   private checkInterval: NodeJS.Timeout | undefined;
   private knownPorts = new Set<string>();
   private processService: PythonProcessService;
@@ -15,14 +16,20 @@ export class StatusBarManager {
     this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     this.statusBarItem.command = 'debugpy.attachToPort';
     this.statusBarItem.tooltip = 'Click to attach to debugpy process';
-    
+
+    this.liveStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
+    this.liveStatusItem.command = 'debugpy.toggleLiveMonitoring';
+    this.liveStatusItem.tooltip = 'Toggle debugpy live monitoring';
+
     this.processService = new PythonProcessService();
     this.config = ConfigManager.getInstance();
     this.lockManager = lockManager;
+    this.updateLiveStatusItem();
   }
 
   startMonitoring(): void {
     this.lockManager.markUserActivity();
+    this.updateLiveStatusItem();
     this.updateStatusBar();
 
     if (this.config.isLiveMonitoringEnabled()) {
@@ -114,8 +121,22 @@ export class StatusBarManager {
     return this.statusBarItem;
   }
 
+  getLiveStatusBarItem(): vscode.StatusBarItem {
+    return this.liveStatusItem;
+  }
+
+  updateLiveStatusItem(): void {
+    if (this.config.isLiveMonitoringEnabled()) {
+      this.liveStatusItem.text = '$(pulse) Debugpy Live On';
+    } else {
+      this.liveStatusItem.text = '$(circle-slash) Debugpy Live Off';
+    }
+    this.liveStatusItem.show();
+  }
+
   dispose(): void {
     this.stopMonitoring();
     this.statusBarItem.dispose();
+    this.liveStatusItem.dispose();
   }
 }
