@@ -106,6 +106,14 @@ function registerCommands(context: vscode.ExtensionContext): void {
     insertDebugpySnippet(true)
   );
 
+  const copyDebugpyCommand = vscode.commands.registerCommand('debugpy.copyAttachSnippet', () =>
+    copyDebugpySnippet(false)
+  );
+
+  const copyDebugpyBreakpointCommand = vscode.commands.registerCommand('debugpy.copyAttachSnippetWithBreakpoint', () =>
+    copyDebugpySnippet(true)
+  );
+
   context.subscriptions.push(
     attachCommand,
     toggleLiveMonitoringCommand,
@@ -113,7 +121,9 @@ function registerCommands(context: vscode.ExtensionContext): void {
     cleanRegionsCommand,
     cleanCurrentFileCommand,
     insertDebugpyCommand,
-    insertDebugpyBreakpointCommand
+    insertDebugpyBreakpointCommand,
+    copyDebugpyCommand,
+    copyDebugpyBreakpointCommand
   );
 }
 
@@ -167,10 +177,11 @@ async function insertDebugpySnippet(includeBreakpoint: boolean): Promise<void> {
   }
 
   const port = configManager.getDefaultPort();
+  const host = configManager.getDefaultHost();
   const lines = [
     ('# region dbpy_attach' + (includeBreakpoint ? ' (b)' : '')),
     'import debugpy',
-    `(debugpy.listen(${port}), debugpy.wait_for_client()) if not debugpy.is_client_connected() else None`
+    `(debugpy.listen(("${host}", ${port})), debugpy.wait_for_client()) if not debugpy.is_client_connected() else None`
   ];
 
   if (includeBreakpoint) {
@@ -188,6 +199,25 @@ async function insertDebugpySnippet(includeBreakpoint: boolean): Promise<void> {
   setTimeout(async () => {
     await decorationManager.collapseSpecificRegion(editor, insertPosition);
   }, 100);
+}
+
+async function copyDebugpySnippet(includeBreakpoint: boolean): Promise<void> {
+  const port = configManager.getDefaultPort();
+  const host = configManager.getDefaultHost();
+  const lines = [
+    ('# region dbpy_attach' + (includeBreakpoint ? ' (b)' : '')),
+    'import debugpy',
+    `(debugpy.listen(("${host}", ${port})), debugpy.wait_for_client()) if not debugpy.is_client_connected() else None`
+  ];
+
+  if (includeBreakpoint) {
+    lines.push('debugpy.breakpoint()');
+  }
+
+  lines.push('# endregion');
+
+  await vscode.env.clipboard.writeText(lines.join('\n'));
+  vscode.window.showInformationMessage('Debugpy attach snippet copied to clipboard');
 }
 
 async function cleanAttachRegionsCurrentFile(): Promise<void> {
@@ -348,6 +378,11 @@ function setupConfigurationHandling(context: vscode.ExtensionContext): void {
     if (event.affectsConfiguration('debugpyAttacher.defaultPort')) {
       const newPort = configManager.getDefaultPort();
       vscode.window.showInformationMessage(`DebugPy default port changed to ${newPort}. New snippets will use this port.`);
+    }
+
+    if (event.affectsConfiguration('debugpyAttacher.defaultHost')) {
+      const newHost = configManager.getDefaultHost();
+      vscode.window.showInformationMessage(`DebugPy default host changed to ${newHost}. New snippets will use this host.`);
     }
   });
 

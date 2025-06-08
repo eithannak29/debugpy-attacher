@@ -97,7 +97,7 @@ export class StatusBarManager {
         type: "python",
         request: "attach",
         connect: {
-          host: "localhost",
+          host: this.config.getDefaultHost(),
           port: parseInt(process.port)
         },
         justMyCode: false,
