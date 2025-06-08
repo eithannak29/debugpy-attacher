@@ -12,6 +12,8 @@ A powerful VS Code extension that automatically detects and attaches to Python d
 
 - 🔍 **Auto-detection** of debugpy processes running on your system
 - ⚡ **Zero/One-click attachment** to discovered processes
+- 📝 **Copy attach snippets** directly to your clipboard
+- 🌍 **Configurable host** for remote debugging scenarios
 
 ## 🚀 Quick Start
 
@@ -59,6 +61,7 @@ Open VS Code settings and search for "debugpy" to configure:
 | `debugpyAttacher.autoAttach` | `false` | (Beta) Automatically attach to new debugpy processes |
 | `debugpyAttacher.showRulerDecorations` | `true` | Show visual indicators in the overview ruler |
 | `debugpyAttacher.defaultPort` | `5678` | Default port for keyboard shortcut |
+| `debugpyAttacher.defaultHost` | `localhost` | Host address for attach snippets and debugger |
 
 ## 🎮 Commands
 
@@ -73,6 +76,8 @@ Access these commands via `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux):
 | `Debugpy: Toggle Auto-Attach` | Enable/disable automatic attachment |
 | `Debugpy: Clean Attach Regions (Current File)` | Remove debugpy regions from active file |
 | `Debugpy: Clean All Attach Regions (Workspace)` | Remove all debugpy regions from workspace |
+| `Debugpy: Copy Attach Snippet` | Copy attach code to clipboard |
+| `Debugpy: Copy Attach Snippet with Breakpoint` | Copy attach code with breakpoint |
 
 ### Status Bar Indicator
 
@@ -84,6 +89,8 @@ The extension adds a new status bar item showing whether **Live Monitoring** is 
 |----------|--------|
 | `Cmd+K B` / `Ctrl+K B` | Insert attach code |
 | `Cmd+K Shift+B` / `Ctrl+K Shift+B` | Insert attach code with breakpoint |
+| `Cmd+K C` / `Ctrl+K C` | Copy attach snippet |
+| `Cmd+K Shift+C` / `Ctrl+K Shift+C` | Copy attach snippet with breakpoint |
 
 *Note: Shortcuts only work in Python files*
 

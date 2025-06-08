@@ -52,3 +52,10 @@ The extension now provides a complete workflow for Python debugging with debugpy
 
 ### 1.2.0
 Added a status bar indicator that displays the state of live monitoring. Clicking the indicator toggles monitoring on or off.
+
+### 1.3.0
+#### Added
+- Commands to copy debugpy attach snippets to the clipboard
+- Keyboard shortcuts for the new copy commands
+- Configuration option `debugpyAttacher.defaultHost` to specify the host address
+- Snippets and debugger connection now use the configured host

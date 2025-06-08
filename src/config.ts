@@ -15,6 +15,11 @@ export class ConfigManager {
     return config.get('defaultPort', 5678);
   }
 
+  getDefaultHost(): string {
+    const config = vscode.workspace.getConfiguration('debugpyAttacher');
+    return config.get('defaultHost', 'localhost');
+  }
+
   isLiveMonitoringEnabled(): boolean {
     const config = vscode.workspace.getConfiguration('debugpyAttacher');
     const defaultValue = process.platform === 'win32' ? false : true;
